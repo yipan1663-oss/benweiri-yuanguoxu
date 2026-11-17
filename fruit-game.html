@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>本味日·原果序｜接水果小游戏</title>
+<style>
+  :root{
+    --cream:#fffdf5;
+    --cream-2:#f7f4e7;
+    --paper:#ffffff;
+    --matcha:#7d9b73;
+    --matcha-deep:#4f6b4b;
+    --matcha-soft:#e7efdd;
+    --ink:#394433;
+    --muted:#88927f;
+    --line:#e4ead9;
+    --red:#c65b4e;
+    --gold:#e0a94e;
+    --shadow:0 16px 40px rgba(85,105,70,.13);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 12% 8%, rgba(125,155,115,.10) 0 2px, transparent 2.5px) 0 0/22px 22px,
+      linear-gradient(160deg,#faf9f1 0%,#f3f6ea 100%);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{max-width:760px;margin:0 auto;padding:22px 18px 34px;}
+
+  /* ---------- header ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px;}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0;}
+  .brand-mark{
+    width:44px;height:44px;flex:none;border-radius:14px;
+    background:linear-gradient(145deg,#8fae82,#5f8058);
+    position:relative;box-shadow:0 8px 16px rgba(95,128,88,.25);
+  }
+  .brand-mark::before{
+    content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-35deg);
+    width:24px;height:14px;border-radius:100% 0 100% 0;background:#f6f7ea;
+  }
+  .brand-mark::after{
+    content:"";position:absolute;right:9px;bottom:9px;width:8px;height:8px;border-radius:50%;
+    background:#f0d592;box-shadow:0 0 0 3px rgba(240,213,146,.25);
+  }
+  .brand h1{margin:0;font-size:19px;letter-spacing:.08em;font-weight:700;white-space:nowrap;}
+  .brand p{margin:3px 0 0;font-size:11px;color:var(--muted);letter-spacing:.18em;}
+  .origin{
+    flex:none;font-size:11px;letter-spacing:.1em;color:var(--matcha-deep);
+    background:rgba(255,255,255,.75);border:1px solid var(--line);
+    padding:8px 12px;border-radius:999px;box-shadow:0 4px 12px rgba(90,110,75,.06);
+  }
+
+  /* ---------- hud ---------- */
+  .hud{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px;
+  }
+  .hud-card{
+    background:rgba(255,255,255,.82);border:1px solid var(--line);border-radius:16px;
+    padding:10px 12px;box-shadow:0 6px 16px rgba(90,110,75,.06);
+  }
+  .hud-card span{display:block;font-size:10px;letter-spacing:.16em;color:var(--muted);margin-bottom:4px;}
+  .hud-card strong{font-size:20px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums;}
+  .hud-card.combo strong{color:var(--red);}
+  .hearts{display:flex;gap:3px;font-size:17px;line-height:1.35;}
+  .heart{color:#d9ded2;}
+  .heart.on{color:var(--red);text-shadow:0 2px 6px rgba(198,91,78,.25);}
+
+  /* ---------- controls ---------- */
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+  button{
+    font-family:inherit;cursor:pointer;border:none;outline:none;
+    padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;letter-spacing:.06em;
+    transition:transform .15s ease,box-shadow .15s ease,background .15s ease,opacity .15s ease;
+  }
+  button:active:not(:disabled){transform:translateY(1px) scale(.98);}
+  button:disabled{opacity:.42;cursor:not-allowed;}
+  .btn-main{background:var(--matcha-deep);color:#fff;box-shadow:0 8px 18px rgba(79,107,75,.24);}
+  .btn-main:hover:not(:disabled){background:#42603f;}
+  .btn-soft{background:#fff;color:var(--matcha-deep);border:1px solid var(--line);box-shadow:0 5px 12px rgba(90,110,75,.06);}
+  .btn-soft:hover:not(:disabled){background:var(--matcha-soft);}
+  .btn-warn{background:#f7e9e3;color:#a95245;border:1px solid #f0d8cf;}
+  .btn-warn:hover:not(:disabled){background:#f6ded5;}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px dashed #cfd9c4;}
+
+  /* ---------- play field ---------- */
+  .field{
+    position:relative;height:min(58vh,500px);min-height:380px;
+    border-radius:26px;overflow:hidden;
+    background:linear-gradient(180deg,#fffef8 0%,#f7f9ef 48%,#edf4e2 100%);
+    border:1px solid #dfe8d3;
+    box-shadow:var(--shadow),inset 0 1px 0 #fff;
+    touch-action:none;user-select:none;-webkit-user-select:none;
+  }
+  .field.shake{animation:shake .34s ease;}
+  @keyframes shake{
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-6px)}
+    40%{transform:translateX(5px)}
+    60%{transform:translateX(-4px)}
+    80%{transform:translateX(3px)}
+  }
+  .cloud{position:absolute;background:rgba(255,255,255,.78);border-radius:999px;pointer-events:none;}
+  .cloud::before,.cloud::after{content:"";position:absolute;background:inherit;border-radius:50%;}
+  .c1{width:96px;height:24px;left:8%;top:15%;animation:drift 18s ease-in-out infinite;}
+  .c1::before{width:40px;height:40px;left:14px;top:-18px;}
+  .c1::after{width:30px;height:30px;right:13px;top:-11px;}
+  .c2{width:72px;height:19px;right:12%;top:29%;opacity:.8;animation:drift 24s ease-in-out infinite reverse;}
+  .c2::before{width:30px;height:30px;left:10px;top:-14px;}
+  .c2::after{width:22px;height:22px;right:10px;top:-9px;}
+  @keyframes drift{0%,100%{transform:translateX(0)}50%{transform:translateX(26px)}}
+  .hills{
+    position:absolute;left:-8%;right:-8%;bottom:-38px;height:130px;
+    background:#d6e5c6;border-radius:50% 50% 0 0 / 100% 100% 0 0;opacity:.75;pointer-events:none;
+  }
+  .hills::after{
+    content:"";position:absolute;left:22%;right:-14%;bottom:-18px;height:96px;
+    background:#c2d9ae;border-radius:50% 50% 0 0 / 100% 100% 0 0;
+  }
+  .ground{
+    position:absolute;left:0;right:0;bottom:0;height:14px;
+    background:linear-gradient(#a6c191,#87a874);border-top:2px solid rgba(255,255,255,.55);pointer-events:none;
+  }
+
+  /* ---------- falling fruit art ---------- */
+  .falling{position:absolute;top:0;left:0;z-index:5;will-change:transform;pointer-events:none;}
+  .falling .fruit-art{position:absolute;inset:0;}
+  .falling .fruit-tag{
+    position:absolute;left:50%;bottom:-17px;transform:translateX(-50%);
+    white-space:nowrap;font-size:10px;line-height:1;padding:3px 7px;border-radius:999px;
+    background:rgba(255,255,255,.92);color:#5c6c53;border:1px solid rgba(125,155,115,.32);
+    box-shadow:0 2px 6px rgba(60,80,50,.10);
+  }
+
+  .passion-blue .fruit-art{
+    border-radius:50%;
+    background:radial-gradient(circle at 32% 26%,#cdbcf2 0 12%,#9c7ed6 42%,#6f51b0 75%,#4f3882 100%);
+    box-shadow:inset -5px -7px 10px rgba(42,20,80,.28),inset 3px 4px 7px rgba(255,255,255,.38),0 5px 11px rgba(76,55,120,.20);
+  }
+  .passion-blue .fruit-art::after{
+    content:"";position:absolute;inset:7px;border-radius:50%;
+    background-image:
+      radial-gradient(circle at 25% 30%,#ffe9a8 0 2px,transparent 2.6px),
+      radial-gradient(circle at 56% 20%,#ffe9a8 0 2px,transparent 2.6px),
+      radial-gradient(circle at 77% 45%,#ffe9a8 0 2px,transparent 2.6px),
+      radial-gradient(circle at 38% 58%,#ffe9a8 0 2px,transparent 2.6px),
+      radial-gradient(circle at 66% 73%,#ffe9a8 0 2px,transparent 2.6px),
+      radial-gradient(circle at 26% 78%,#ffe9a8 0 2px,transparent 2.6px);
+  }
+  .passion-gold .fruit-art{
+    border-radius:50%;
+    background:radial-gradient(circle at 32% 25%,#fff0c6 0 12%,#f9d37c 42%,#eeb149 75%,#cf8427 100%);
+    box-shadow:inset -5px -7px 10px rgba(120,68,10,.25),inset 3px 4px 7px rgba(255,255,255,.5),0 5px 11px rgba(160,110,35,.20);
+  }
+  .passion-gold .fruit-art::after{
+    content:"";position:absolute;inset:7px;border-radius:50%;
+    background-image:
+      radial-gradient(circle at 27% 31%,#8a5a20 0 2px,transparent 2.6px),
+      radial-gradient(circle at 56% 21%,#8a5a20 0 2px,transparent 2.6px),
+      radial-gradient(circle at 76% 46%,#8a5a20 0 2px,transparent 2.6px),
+      radial-gradient(circle at 37% 59%,#8a5a20 0 2px,transparent 2.6px),
+      radial-gradient(circle at 65% 74%,#8a5a20 0 2px,transparent 2.6px),
+      radial-gradient(circle at 27% 77%,#8a5a20 0 2px,transparent 2.6px);
+  }
+
+  .wax .fruit-art{
+    position:absolute;left:13%;top:9%;width:74%;height:87%;
+    border-radius:46% 46% 40% 40% / 58% 58% 42% 42%;
+    background:linear-gradient(120deg,#7c1226 0%,#b81e39 40%,#d4314d 58%,#6d0d20 100%);
+    box-shadow:inset -6px -8px 12px rgba(60,0,15,.35),inset 4px 5px 8px rgba(255,190,190,.26),0 5px 11px rgba(120,20,40,.20);
+  }
+  .wax .fruit-art::before{
+    content:"";position:absolute;top:-5px;left:50%;transform:translateX(-50%);
+    width:13px;height:9px;background:#5e8c4a;border-radius:50% 50% 30% 30%;box-shadow:0 2px 0 #476f38;
+  }
+  .wax .fruit-art::after{
+    content:"";position:absolute;left:22%;top:18%;width:7px;height:20px;border-radius:50%;
+    background:linear-gradient(rgba(255,255,255,.38),transparent);filter:blur(1px);
+  }
+
+  .melonpine .fruit-art{
+    position:absolute;left:12%;top:30%;width:76%;height:66%;
+    border-radius:46% 46% 45% 45% / 40% 40% 50% 50%;
+    background:
+      repeating-linear-gradient(58deg,rgba(255,255,255,.18) 0 5px,transparent 5px 11px),
+      repeating-linear-gradient(-58deg,rgba(150,95,20,.14) 0 5px,transparent 5px 11px),
+      radial-gradient(circle at 70% 28%,#ffe08a,#f3b849 60%,#cf8a2c);
+    box-shadow:inset -5px -6px 10px rgba(120,70,10,.28),0 5px 11px rgba(150,100,30,.20);
+  }
+  .melonpine .fruit-art::before{
+    content:"";position:absolute;left:50%;top:-34%;transform:translateX(-50%);
+    width:62%;height:44%;background:linear-gradient(#75a052,#3f6d34);
+    clip-path:polygon(50% 0,62% 32%,86% 12%,72% 48%,100% 40%,76% 70%,92% 92%,50% 78%,8% 92%,24% 70%,0 40%,28% 48%,14% 12%,38% 32%);
+  }
+  .melonpine .fruit-art::after{
+    content:"";position:absolute;right:12%;top:20%;width:8px;height:22px;border-radius:50%;
+    background:rgba(255,255,255,.32);filter:blur(1px);
+  }
+
+  .lychee .fruit-art{
+    position:absolute;left:6%;top:13%;width:88%;height:86%;border-radius:48%;
+    background:radial-gradient(circle at 30% 25%,#ff9d8e,#e04a45 45%,#b52a30 80%,#8d1d27);
+    box-shadow:inset -5px -7px 10px rgba(90,10,15,.32),inset 3px 4px 6px rgba(255,255,255,.32),0 5px 11px rgba(150,35,35,.20);
+  }
+  .lychee .fruit-art::before{
+    content:"";position:absolute;inset:3px;border-radius:48%;
+    background-image:radial-gradient(circle,rgba(255,255,255,.42) 0 1px,transparent 1.7px);
+    background-size:8px 8px;opacity:.75;
+  }
+  .lychee .fruit-art::after{
+    content:"";position:absolute;right:-3px;top:-6px;width:19px;height:11px;
+    background:#5d9149;border-radius:100% 0 100% 0;transform:rotate(-18deg);
+  }
+
+  .bomb .fruit-art{
+    display:flex;align-items:center;justify-content:center;font-size:36px;
+    filter:drop-shadow(0 5px 6px rgba(0,0,0,.22));
+  }
+
+  /* ---------- basket ---------- */
+  .basket{
+    position:absolute;bottom:12px;width:118px;height:62px;left:50%;
+    transform:translateX(-50%);z-index:8;pointer-events:none;
+  }
+  .basket-handle{
+    position:absolute;left:50%;top:-22px;transform:translateX(-50%);
+    width:88px;height:46px;border:5px solid #b98a52;border-bottom:none;border-radius:50% 50% 0 0;opacity:.92;
+  }
+  .basket-body{
+    position:absolute;inset:8px 0 0;border:4px solid #9d6e3d;border-top:6px solid #b7844b;
+    border-radius:8px 8px 26px 26px;
+    background:
+      repeating-linear-gradient(90deg,rgba(255,255,255,.16) 0 9px,transparent 9px 12px),
+      repeating-linear-gradient(0deg,rgba(110,68,28,.18) 0 7px,transparent 7px 11px),
+      linear-gradient(#d8ad74,#b9864e);
+    box-shadow:0 8px 14px rgba(80,60,30,.22),inset 0 -6px 8px rgba(100,60,20,.18);
+  }
+
+  /* ---------- toast & particles ---------- */
+  .toast{
+    position:absolute;left:50%;top:18%;transform:translateX(-50%);z-index:15;
+    padding:8px 16px;border-radius:999px;font-size:14px;font-weight:700;letter-spacing:.06em;
+    background:rgba(255,255,255,.94);color:var(--matcha-deep);border:1px solid var(--line);
+    box-shadow:0 8px 20px rgba(70,95,60,.14);opacity:0;pointer-events:none;white-space:nowrap;
+  }
+  .toast.show{animation:toastPop 1s ease forwards;}
+  .toast.hot{color:var(--red);border-color:#f2d8cf;}
+  .toast.bad{color:#a95245;border-color:#f0d8cf;background:#fff8f4;}
+  .toast.lv{color:#fff;background:var(--matcha-deep);border-color:var(--matcha-deep);}
+  @keyframes toastPop{
+    0%{opacity:0;transform:translate(-50%,10px) scale(.9)}
+    18%{opacity:1;transform:translate(-50%,0) scale(1)}
+    75%{opacity:1;transform:translate(-50%,-6px) scale(1)}
+    100%{opacity:0;transform:translate(-50%,-22px) scale(.96)}
+  }
+  .spark{
+    position:absolute;width:8px;height:8px;border-radius:50%;z-index:9;pointer-events:none;
+    background:#f3c877;box-shadow:0 0 0 2px rgba(255,255,255,.6);
+    animation:spark .62s cubic-bezier(.2,.7,.3,1) forwards;
+  }
+  @keyframes spark{
+    0%{opacity:1;transform:translate(0,0) scale(1)}
+    100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.35)}
+  }
+
+  /* ---------- overlay ---------- */
+  .overlay{
+    position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+    background:rgba(250,252,245,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    padding:20px;
+  }
+  .overlay.hidden{display:none;}
+  .panel{
+    width:min(100%,400px);text-align:center;background:rgba(255,255,255,.96);
+    border:1px solid var(--line);border-radius:22px;padding:26px 24px;
+    box-shadow:0 20px 45px rgba(70,95,60,.18);
+  }
+  .panel .eyebrow{font-size:10px;letter-spacing:.28em;color:var(--matcha);margin-bottom:10px;}
+  .panel h2{margin:0 0 8px;font-size:24px;letter-spacing:.06em;}
+  .panel p{margin:0 0 14px;font-size:12px;line-height:1.9;color:var(--muted);}
+  .panel .recipe{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:14px 0 18px;
+  }
+  .panel .recipe span{
+    font-size:11px;padding:5px 9px;border-radius:999px;background:var(--matcha-soft);color:var(--matcha-deep);
+  }
+  .panel .stats{display:flex;justify-content:center;gap:26px;margin:16px 0 20px;}
+  .panel .stats div{font-size:11px;color:var(--muted);}
+  .panel .stats b{display:block;font-size:22px;color:var(--ink);margin-top:3px;font-variant-numeric:tabular-nums;}
+  .panel button{width:100%;max-width:260px;}
+  .panel .secondary{margin-top:9px;}
+
+  /* ---------- catalog ---------- */
+  .catalog{margin-top:16px;background:rgba(255,255,255,.72);border:1px solid var(--line);border-radius:20px;padding:16px 18px;}
+  .catalog-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px;}
+  .catalog-head b{font-size:13px;letter-spacing:.14em;}
+  .catalog-head span{font-size:10px;color:var(--muted);letter-spacing:.08em;}
+  .cat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  .cat-item{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;
+    background:var(--paper);border:1px solid #edf0e6;
+  }
+  .mini-icon{position:relative;width:34px;height:34px;flex:none;}
+  .cat-item b{display:block;font-size:12px;margin-bottom:2px;}
+  .cat-item span{display:block;font-size:10px;color:var(--muted);}
+  .pair{display:flex;gap:2px;}
+  .pair .mini-icon{width:28px;height:28px;}
+  .tip{margin-top:10px;font-size:10px;color:var(--muted);text-align:center;letter-spacing:.04em;}
+
+  @media (max-width:520px){
+    .app{padding:14px 12px 26px;}
+    .brand h1{font-size:16px;}
+    .brand p{font-size:9px;}
+    .brand-mark{width:38px;height:38px;border-radius:12px;}
+    .origin{font-size:9px;padding:7px 9px;}
+    .hud{gap:6px;}
+    .hud-card{padding:8px 9px;border-radius:12px;}
+    .hud-card strong{font-size:17px;}
+    .hud-card span{font-size:9px;letter-spacing:.08em;}
+    .hearts{font-size:14px;}
+    .controls button{flex:1 1 calc(50% - 4px);padding:10px 6px;font-size:12px;}
+    .field{height:56vh;min-height:360px;border-radius:20px;}
+    .cat-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <h1>本味日·原果序</h1>
+        <p>BENWEI DAY · ORIGINAL FRUIT</p>
+      </div>
+    </div>
+    <div class="origin">产地 · 漳州漳浦</div>
+  </div>
+
+  <div class="hud">
+    <div class="hud-card"><span>分数 SCORE</span><strong id="score">0</strong></div>
+    <div class="hud-card"><span>关卡 LEVEL</span><strong id="level">1</strong></div>
+    <div class="hud-card combo"><span>连击 COMBO</span><strong id="combo">—</strong></div>
+    <div class="hud-card"><span>生命 LIFE</span><div class="hearts" id="lives"></div></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn-main" id="btnStart">开始游戏</button>
+    <button class="btn-soft" id="btnPause" disabled>暂停</button>
+    <button class="btn-warn" id="btnEnd" disabled>结束</button>
+    <button class="btn-ghost" id="btnRestart">重新开始</button>
+  </div>
+
+  <div class="field" id="field">
+    <div class="cloud c1"></div>
+    <div class="cloud c2"></div>
+    <div class="hills"></div>
+    <div class="ground"></div>
+    <div class="basket" id="basket">
+      <div class="basket-handle"></div>
+      <div class="basket-body"></div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <div class="overlay" id="overlay"></div>
+  </div>
+
+  <div class="catalog">
+    <div class="catalog-head">
+      <b>本季果单</b>
+      <span>漳州漳浦 · 当季鲜摘</span>
+    </div>
+    <div class="cat-grid">
+      <div class="cat-item">
+        <div class="pair">
+          <div class="mini-icon passion-blue"><div class="fruit-art"></div></div>
+          <div class="mini-icon passion-gold"><div class="fruit-art"></div></div>
+        </div>
+        <div><b>百香果</b><span>蓝星 · 钦蜜88</span></div>
+      </div>
+      <div class="cat-item">
+        <div class="mini-icon wax"><div class="fruit-art"></div></div>
+        <div><b>黑金刚莲雾</b><span>脆甜 · 清润</span></div>
+      </div>
+      <div class="cat-item">
+        <div class="mini-icon melonpine"><div class="fruit-art"></div></div>
+        <div><b>西瓜凤梨</b><span>金黄 · 蜜香</span></div>
+      </div>
+      <div class="cat-item">
+        <div class="mini-icon lychee"><div class="fruit-art"></div></div>
+        <div><b>荔枝</b><span>鲜红 · 多汁</span></div>
+      </div>
+    </div>
+    <div class="tip">移动鼠标 / 手指拖动篮子接果 · 漏果或接到 💣 炸弹会扣 1 条命 · 每接 10 颗进一关</div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var field=document.getElementById('field');
+  var basket=document.getElementById('basket');
+  var overlay=document.getElementById('overlay');
+  var toastEl=document.getElementById('toast');
+  var scoreEl=document.getElementById('score');
+  var levelEl=document.getElementById('level');
+  var comboEl=document.getElementById('combo');
+  var livesEl=document.getElementById('lives');
+  var btnStart=document.getElementById('btnStart');
+  var btnPause=document.getElementById('btnPause');
+  var btnEnd=document.getElementById('btnEnd');
+  var btnRestart=document.getElementById('btnRestart');
+
+  var FRUITS=[
+    {key:'blue',  cls:'passion-blue', tag:'蓝星',       base:10, weight:22},
+    {key:'gold',  cls:'passion-gold', tag:'钦蜜88',     base:12, weight:20},
+    {key:'wax',   cls:'wax',          tag:'黑金刚莲雾', base:15, weight:18},
+    {key:'pine',  cls:'melonpine',    tag:'西瓜凤梨',   base:18, weight:16},
+    {key:'lychee',cls:'lychee',       tag:'荔枝',       base:10, weight:24}
+  ];
+  var BOMB={key:'bomb',cls:'bomb',tag:'炸弹',base:0,weight:0,emoji:'💣',bomb:true};
+
+  var phase='idle';
+  var score=0,lives=3,level=1,combo=0,caught=0;
+  var best=(function(){try{return parseInt(localStorage.getItem('benwei-orchard-best')||'0',10)||0;}catch(e){return 0;}})();
+  var fruits=[],basketX=0,fieldW=0,fieldH=0;
+  var spawnTimer=0,lastCatch=0,lastTs=0,raf=0,seq=0;
+  var toastTimer=0,shakeTimer=0,overReason='';
+
+  function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+  function basketWidth(){return fieldW<520?92:118;}
+  function mouthY(){return fieldH-66;}
+
+  function measure(){
+    var r=field.getBoundingClientRect();
+    fieldW=r.width;fieldH=r.height;
+    basket.style.width=basketWidth()+'px';
+    if(!basketX)basketX=fieldW/2;
+    basketX=clamp(basketX,basketWidth()/2+4,fieldW-basketWidth()/2-4);
+    basket.style.left=basketX+'px';
+  }
+  measure();
+  window.addEventListener('resize',measure);
+  if(window.ResizeObserver){new ResizeObserver(measure).observe(field);}
+
+  function updateHUD(){
+    scoreEl.textContent=score;
+    levelEl.textContent=level;
+    comboEl.textContent=combo>1?('×'+combo):'—';
+    var html='';
+    for(var i=0;i<3;i++)html+='<span class="heart'+(i<lives?' on':'')+'">♥</span>';
+    livesEl.innerHTML=html;
+  }
+
+  function updateButtons(){
+    btnStart.disabled=(phase==='playing'||phase==='paused');
+    btnPause.disabled=(phase==='idle'||phase==='over');
+    btnPause.textContent=(phase==='paused')?'继续':'暂停';
+    btnEnd.disabled=(phase==='idle'||phase==='over');
+  }
+
+  function showToast(text,kind){
+    toastEl.textContent=text;
+    toastEl.className='toast'+(kind?' '+kind:'');
+    void toastEl.offsetWidth;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer=setTimeout(function(){toastEl.classList.remove('show');},1000);
+  }
+
+  function burst(x,y){
+    for(var i=0;i<7;i++){
+      var p=document.createElement('div');
+      p.className='spark';
+      p.style.left=x+'px';p.style.top=y+'px';
+      p.style.setProperty('--dx',(Math.random()*90-45).toFixed(1)+'px');
+      p.style.setProperty('--dy',(-25-Math.random()*55).toFixed(1)+'px');
+      field.appendChild(p);
+      (function(node){setTimeout(function(){node.remove();},650);})(p);
+    }
+  }
+
+  function pickFruit(){
+    var bombChance=Math.min(0.10+(level-1)*0.012,0.20);
+    if(Math.random()<bombChance)return BOMB;
+    var total=0,i;
+    for(i=0;i<FRUITS.length;i++)total+=FRUITS[i].weight;
+    var r=Math.random()*total;
+    for(i=0;i<FRUITS.length;i++){
+      r-=FRUITS[i].weight;
+      if(r<=0)return FRUITS[i];
+    }
+    return FRUITS[0];
+  }
+
+  function spawn(){
+    var t=pickFruit();
+    var size=t.bomb?40:46;
+    var x=36+Math.random()*Math.max(10,fieldW-72);
+    var el=document.createElement('div');
+    el.className='falling '+t.cls;
+    el.style.width=size+'px';el.style.height=size+'px';
+    el.innerHTML='<div class="fruit-art">'+(t.emoji||'')+'</div><div class="fruit-tag">'+t.tag+'</div>';
+    field.appendChild(el);
+    var speed=108+(level-1)*24;
+    fruits.push({
+      el:el,x:x,y:-size,size:size,
+      vy:speed*(0.86+Math.random()*0.34)*(t.bomb?1.08:1),
+      rot:Math.random()*28-14,vr:Math.random()*70-35,
+      type:t,bomb:!!t.bomb
+    });
+  }
+
+  function removeFruit(index){
+    fruits[index].el.remove();
+    fruits.splice(index,1);
+  }
+
+  function catchFruit(f){
+    if(phase!=='playing')return;
+    var now=performance.now();
+    combo=(now-lastCatch<1900)?combo+1:1;
+    lastCatch=now;
+    var gain=f.type.base+(combo-1)*3;
+    score+=gain;caught++;
+    updateHUD();
+    burst(f.x,f.y);
+    if(combo>=3)showToast('连击 ×'+combo+'  +'+gain,'hot');
+    else showToast('+'+gain,'');
+    if(caught%10===0){
+      level++;updateHUD();
+      showToast('第 '+level+' 关 · 果速加快','lv');
+    }
+  }
+
+  function loseLife(reason){
+    if(phase!=='playing')return;
+    lives--;combo=0;lastCatch=0;
+    updateHUD();
+    showToast(reason,'bad');
+    field.classList.add('shake');
+    clearTimeout(shakeTimer);
+    shakeTimer=setTimeout(function(){field.classList.remove('shake');},350);
+    if(lives<=0)gameOver(reason==='接到炸弹，扣 1 命'?'接到炸弹':'水果落地');
+  }
+
+  function loop(ts){
+    if(phase!=='playing')return;
+    var dt=Math.min((ts-lastTs)/1000,0.05);
+    lastTs=ts;
+
+    spawnTimer-=dt;
+    if(spawnTimer<=0){
+      spawn();
+      var interval=Math.max(0.48,1.22-(level-1)*0.075);
+      spawnTimer=interval*(0.82+Math.random()*0.42);
+    }
+
+    var bw=basketWidth(),my=mouthY(),half=bw/2-2;
+    for(var i=fruits.length-1;i>=0;i--){
+      var f=fruits[i];
+      f.y+=f.vy*dt;
+      f.rot+=f.vr*dt;
+      f.el.style.transform='translate3d('+(f.x-f.size/2).toFixed(1)+'px,'+(f.y-f.size/2).toFixed(1)+'px,0) rotate('+f.rot.toFixed(1)+'deg)';
+      var bottom=f.y+f.size*0.44;
+      if(bottom>=my&&bottom<=my+26&&Math.abs(f.x-basketX)<half){
+        removeFruit(i);
+        if(f.bomb)loseLife('接到炸弹，扣 1 命');
+        else catchFruit(f);
+      }else if(f.y-f.size*0.5>fieldH+12){
+        removeFruit(i);
+        if(!f.bomb)loseLife('水果落地，扣 1 命');
+      }
+      if(phase!=='playing')break;
+    }
+    if(phase==='playing')raf=requestAnimationFrame(loop);
+  }
+
+  function clearFruits(){
+    for(var i=0;i<fruits.length;i++)fruits[i].el.remove();
+    fruits=[];
+    var sparks=field.querySelectorAll('.spark');
+    for(var j=0;j<sparks.length;j++)sparks[j].remove();
+  }
+
+  function startGame(){
+    cancelAnimationFrame(raf);
+    clearFruits();
+    score=0;lives=3;level=1;combo=0;caught=0;
+    spawnTimer=0.45;lastCatch=0;overReason='';
+    basketX=fieldW/2;basket.style.left=basketX+'px';
+    updateHUD();
+    setPhase('playing');
+    lastTs=performance.now();
+    raf=requestAnimationFrame(loop);
+  }
+
+  function gameOver(reason){
+    if(phase==='over')return;
+    phase='over';overReason=reason||'本局结束';
+    cancelAnimationFrame(raf);
+    if(score>best){
+      best=score;
+      try{localStorage.setItem('benwei-orchard-best',String(best));}catch(e){}
+    }
+    updateButtons();
+    showOverlay('over');
+  }
+
+  function togglePause(){
+    if(phase==='playing'){
+      phase='paused';cancelAnimationFrame(raf);updateButtons();showOverlay('paused');
+    }else if(phase==='paused'){
+      phase='playing';hideOverlay();updateButtons();
+      lastTs=performance.now();raf=requestAnimationFrame(loop);
+    }
+  }
+
+  function hideOverlay(){overlay.classList.add('hidden');overlay.innerHTML='';}
+
+  function showOverlay(kind){
+    overlay.classList.remove('hidden');
+    var html='';
+    if(kind==='idle'){
+      html='<div class="panel">'+
+        '<div class="eyebrow">漳州漳浦 · 本味日</div>'+
+        '<h2>接住这一口原味</h2>'+
+        '<p>左右移动篮子，接住从天上落下的当季原果。<br>漏掉水果或碰到炸弹都会扣命，连击有加分。</p>'+
+        '<div class="recipe"><span>百香果 · 蓝星</span><span>钦蜜88</span><span>黑金刚莲雾</span><span>西瓜凤梨</span><span>荔枝</span></div>'+
+        '<button class="btn-main" data-go="start">开始接果</button>'+
+      '</div>';
+    }else if(kind==='paused'){
+      html='<div class="panel">'+
+        '<div class="eyebrow">PAUSED</div>'+
+        '<h2>小憩片刻</h2>'+
+        '<p>果篮已停，随时可以继续。</p>'+
+        '<div class="stats"><div>当前分数<b>'+score+'</b></div><div>关卡<b>'+level+'</b></div></div>'+
+        '<button class="btn-main" data-go="resume">继续游戏</button>'+
+        '<button class="btn-soft secondary" data-go="restart">重新开始</button>'+
+      '</div>';
+    }else{
+      html='<div class="panel">'+
+        '<div class="eyebrow">GAME OVER</div>'+
+        '<h2>本局结束</h2>'+
+        '<p>'+overReason+' · 再来一局，把原味接满篮。</p>'+
+        '<div class="stats"><div>本局分数<b>'+score+'</b></div><div>到达关卡<b>'+level+'</b></div><div>最高分<b>'+best+'</b></div></div>'+
+        '<button class="btn-main" data-go="restart">再来一局</button>'+
+      '</div>';
+    }
+    overlay.innerHTML=html;
+    var btns=overlay.querySelectorAll('[data-go]');
+    for(var i=0;i<btns.length;i++){
+      btns[i].addEventListener('click',function(){
+        var a=this.getAttribute('data-go');
+        if(a==='start'||a==='restart')startGame();
+        else if(a==='resume')togglePause();
+      });
+    }
+  }
+
+  function setPhase(p){
+    phase=p;
+    updateButtons();
+    if(p==='playing')hideOverlay();
+    else showOverlay(p);
+  }
+
+  function moveBasket(clientX){
+    if(phase!=='playing')return;
+    var r=field.getBoundingClientRect();
+    basketX=clamp(clientX-r.left,basketWidth()/2+4,r.width-basketWidth()/2-4);
+    basket.style.left=basketX+'px';
+  }
+
+  field.addEventListener('pointerdown',function(e){
+    if(phase!=='playing')return;
+    try{field.setPointerCapture(e.pointerId);}catch(err){}
+    moveBasket(e.clientX);
+    e.preventDefault();
+  });
+  field.addEventListener('pointermove',function(e){
+    if(phase!=='playing')return;
+    if(e.pointerType==='mouse'||e.buttons||e.pointerType==='touch')moveBasket(e.clientX);
+  });
+  window.addEventListener('keydown',function(e){
+    if(phase!=='playing')return;
+    var step=e.shiftKey?60:32;
+    if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A'){
+      basketX=clamp(basketX-step,basketWidth()/2+4,fieldW-basketWidth()/2-4);
+      basket.style.left=basketX+'px';e.preventDefault();
+    }else if(e.key==='ArrowRight'||e.key==='d'||e.key==='D'){
+      basketX=clamp(basketX+step,basketWidth()/2+4,fieldW-basketWidth()/2-4);
+      basket.style.left=basketX+'px';e.preventDefault();
+    }else if(e.key==='p'||e.key==='P'||e.key===' '){
+      togglePause();e.preventDefault();
+    }
+  });
+
+  btnStart.addEventListener('click',startGame);
+  btnPause.addEventListener('click',togglePause);
+  btnEnd.addEventListener('click',function(){gameOver('主动结束');});
+  btnRestart.addEventListener('click',startGame);
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden&&phase==='playing')togglePause();
+  });
+
+  updateHUD();
+  updateButtons();
+  showOverlay('idle');
+})();
+</script>
+</body>
+</html>
